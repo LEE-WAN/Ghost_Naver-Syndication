@@ -1,0 +1,14 @@
+C:\Users\Sang\Documents\GitHub\Project_DaeHwa\Naver\Naver\bin\Debug\Naver.exe.config
+C:\Users\Sang\Documents\GitHub\Project_DaeHwa\Naver\Naver\bin\Debug\Naver.exe
+C:\Users\Sang\Documents\GitHub\Project_DaeHwa\Naver\Naver\bin\Debug\Naver.pdb
+C:\Users\Sang\Documents\GitHub\Project_DaeHwa\Naver\Naver\obj\Debug\Naver.csprojResolveAssemblyReference.cache
+C:\Users\Sang\Documents\GitHub\Project_DaeHwa\Naver\Naver\obj\Debug\Naver.exe
+C:\Users\Sang\Documents\GitHub\Project_DaeHwa\Naver\Naver\obj\Debug\Naver.pdb
+C:\Users\Sang\Documents\GitHub\Naver\Naver\bin\Debug\Naver.exe.config
+C:\Users\Sang\Documents\GitHub\Naver\Naver\obj\Debug\Naver.exe
+C:\Users\Sang\Documents\GitHub\Naver\Naver\obj\Debug\Naver.pdb
+C:\Users\Sang\Documents\GitHub\Naver\Naver\bin\Debug\Naver.exe
+C:\Users\Sang\Documents\GitHub\Naver\Naver\bin\Debug\Naver.pdb
+C:\Users\Sang\Documents\GitHub\Naver\Naver\obj\Debug\Naver.csprojResolveAssemblyReference.cache
+C:\Users\Sang\Documents\GitHub\Naver\Naver\bin\Debug\HtmlAgilityPack.pdb
+C:\Users\Sang\Documents\GitHub\Naver\Naver\bin\Debug\HtmlAgilityPack.xml
