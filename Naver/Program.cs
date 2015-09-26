@@ -56,8 +56,8 @@ namespace Naver
                 q.add_post(url, title, author, updated, "http://blog.iwanhae.ga", content, summary);
             }
             q.chk_deleted_posts();
-            Console.WriteLine(q.get_xml());
             q.get().Save("Naver.xml");
+            Console.WriteLine("변경사항이 저장됨");
             Console.ReadLine();
         }
     }
@@ -142,6 +142,7 @@ namespace Naver
         /// <param name="summary">메타데이터</param>
         public void add_post(string id, string title, string author, string updated, string root_url, string html, string summary)
         {
+            Console.WriteLine(title + "추가됨");
             XmlNode entry = xml.CreateElement(null,"entry", "http://webmastertool.naver.com");
             XmlElement temp;
             entry.AppendChild(CreateNode(xml, "id", id));
@@ -156,7 +157,8 @@ namespace Naver
             foreach (XmlNode xn in xnl)
             {
                 if(xn["id"].InnerText == id)
-                {                  
+                {
+                    Console.WriteLine(xn["title"].InnerText + "삭제됨");
                     updated = xn["published"].InnerText;
                     xml["feed"].RemoveChild(xn);
                     break;
@@ -220,6 +222,7 @@ namespace Naver
                     {
                         if (xn["id"].InnerText == id)
                         {
+                            Console.WriteLine(xn["title"].InnerText + "완전 제거됨");
                             xml["feed"].RemoveChild(xn);
                             break;
                         }

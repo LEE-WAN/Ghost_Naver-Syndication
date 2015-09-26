@@ -5,7 +5,7 @@
     <name>LEEWANHAE</name>
     <email>puppytrain96@naver.com</email>
   </author>
-  <updated>2015-09-26T07:43:01+09:00</updated>
+  <updated>2015-09-26T07:49:28+09:00</updated>
   <link rel="site" href="http://blog.iwanhae.ga" title="iWan" />
   <entry>
     <id>http://blog.iwanhae.ga/evo-850-vs-x110/</id>
@@ -682,5 +682,4 @@ Debian계열에선 전부 작동한다.</p>
         ]]></content>
     <summary type="text"><![CDATA[Success in installing the Ghost Blog, which run by node.js...">]]></summary>
   </entry>
-  <deleted-entry when="2015-09-26T07:43:01+09:00" ref="http://blog.iwanhae.ga/welcome-to-ghost/" />
 </feed>
