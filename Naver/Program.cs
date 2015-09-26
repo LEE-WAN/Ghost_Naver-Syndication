@@ -5,6 +5,9 @@ using System.Xml;
 using HtmlAgilityPack;
 using System;
 using System.IO;
+using System.Collections;
+using System.Collections.Generic;
+
 namespace Naver
 {
     class Program
@@ -21,12 +24,13 @@ namespace Naver
                 StreamReader sr = new StreamReader("Naver.xml");
                 Syndication.LoadXml(sr.ReadToEnd());
                 q = new Naver_Syndication(Syndication);
+                sr.Close();
             }
             else
             {
                 q = new Naver_Syndication("http://blog.iwanhae.ga/", "iWan", "LEEWANHAE", "puppytrain96@naver.com", "http://blog.iwanhae.ga");
             }
-
+            
 
             XmlDocument xml = new XmlDocument();
             xml.Load("http://blog.iwanhae.ga/sitemap-posts.xml");
@@ -51,13 +55,25 @@ namespace Naver
                 ////////
                 q.add_post(url, title, author, updated, "http://blog.iwanhae.ga", content, summary);
             }
+            q.chk_deleted_posts();
             Console.WriteLine(q.get_xml());
+            q.get().Save("Naver.xml");
             Console.ReadLine();
         }
     }
     class Naver_Syndication
     {
+        
         XmlDocument xml = new XmlDocument();
+        Queue<string> chk_before_posts = new Queue<string>();
+        Queue<string> chk_after_posts = new Queue<string>();
+
+
+        public XmlDocument get()
+        {
+            return xml;
+        } 
+
 
         /// <summary>
         /// 네이버 신디케이션 첫 초기화
@@ -69,44 +85,48 @@ namespace Naver
         /// <param name="url">사이트 주소</param>
         public Naver_Syndication(string id, string title, string name, string email, string url)
         {
+           
             //http://webmastertool.naver.com/syndi/naver_syndication_document_sample.xml
             //http://cc.naver.com/cc?a=sgu.guide&r=&i=&bw=1263&px=410&py=882&sx=410&sy=619&m=1&nsc=wmt.all&u=http%3A%2F%2Fwebmastertool.naver.com%2Ftools%2Fdownfile.naver%3Ffilename%3DNaver_Syndication_User_Guide_v1.2.pdf
 
             string now = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss") + "+09:00";
 
-            xml.AppendChild(xml.CreateXmlDeclaration("1.0", "utf-8", "yes"));
-            XmlElement root = xml.CreateElement("feed");
+          //  xml.AppendChild(xml.CreateXmlDeclaration("1.0", "utf-8", "yes"));
+            XmlElement root = xml.CreateElement("feed", "http://webmastertool.naver.com");
             XmlElement temp;
-            root.SetAttribute("xmlns", "http://webmastertool.naver.com");
 
             root.AppendChild(CreateNode(xml, "id", id));
             root.AppendChild(CreateNode(xml, "title", title));
-            root.AppendChild(CreateNode(xml, "author", 
-                innerxml(xml,"name",name) + innerxml(xml,"email",email)));
+            //     root.AppendChild(CreateNode(xml, "author", innerxml(xml,"name",name) + innerxml(xml,"email",email)));
+            root.AppendChild(xml.CreateElement("author", "http://webmastertool.naver.com"));
+            root["author"].AppendChild(CreateNode(xml, "name", name));
+            root["author"].AppendChild(CreateNode(xml, "email", email));
+            //
             root.AppendChild(CreateNode(xml, "updated", now));
 
-            temp = xml.CreateElement("link");
+            temp = xml.CreateElement("link", "http://webmastertool.naver.com");
             temp.SetAttribute("rel", "site");
             temp.SetAttribute("href", url);
             temp.SetAttribute("title", title);
             root.AppendChild(temp);
             temp = null;
-
-
-
+            
             xml.AppendChild(root);
 
         }
         public Naver_Syndication(XmlDocument input)
         {
-            xml.AppendChild(xml.CreateXmlDeclaration("1.0", "utf-8", "yes"));
-            string now = DateTime.UtcNow.ToString("yyyy-MM-dd-THH:mm:ss") + "+09:00";
+         //   xml.AppendChild(xml.CreateXmlDeclaration("1.0", "utf-8", "yes"));
+            string now = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss") + "+09:00";
             XmlNode FN = input.DocumentElement;
-            XmlElement sub = (XmlElement)FN.SelectSingleNode("updated");
-            sub.InnerText = now;
+            FN["updated"].InnerText = now;
+            xml.LoadXml(FN.OuterXml);
 
-            FN.ReplaceChild(FN.SelectSingleNode("updated"), sub);
-            xml.AppendChild(FN);
+            XmlNodeList xnl = xml.GetElementsByTagName("entry");
+            foreach (XmlNode xn in xnl)
+            {
+               chk_before_posts.Enqueue(xn["id"].InnerText);
+            }
         }
 
 
@@ -122,11 +142,14 @@ namespace Naver
         /// <param name="summary">메타데이터</param>
         public void add_post(string id, string title, string author, string updated, string root_url, string html, string summary)
         {
-            XmlNode entry = xml.CreateElement("entry");
+            XmlNode entry = xml.CreateElement(null,"entry", "http://webmastertool.naver.com");
             XmlElement temp;
             entry.AppendChild(CreateNode(xml, "id", id));
             entry.AppendChild(CreateNode(xml, "title", title));
-            entry.AppendChild(CreateNode(xml, "author", innerxml(xml, "name", author)));
+            //entry.AppendChild(CreateNode(xml, "author", innerxml(xml, "name", author)));
+            entry.AppendChild(xml.CreateElement("author", "http://webmastertool.naver.com"));
+            entry["author"].AppendChild(CreateNode(xml, "name", author));
+
             entry.AppendChild(CreateNode(xml, "updated", updated));
             //
             XmlNodeList xnl = xml.GetElementsByTagName("entry");
@@ -134,43 +157,79 @@ namespace Naver
             {
                 if(xn["id"].InnerText == id)
                 {                  
-                    updated = xn["id"]["published"].InnerText;
-                    xml.RemoveChild(xn);
+                    updated = xn["published"].InnerText;
+                    xml["feed"].RemoveChild(xn);
                     break;
                 }
             }
             entry.AppendChild(CreateNode(xml, "published", updated));
             //
-            temp = xml.CreateElement("link");
-            temp.SetAttribute("rel", "via");
-            temp.SetAttribute("href", root_url);
+            temp = xml.CreateElement("link", "http://webmastertool.naver.com");
             temp.SetAttribute("title", "Main Page");
+            temp.SetAttribute("href", root_url);
+            temp.SetAttribute("rel", "via");
             entry.AppendChild(temp);
             temp = null;
             //
-            temp = xml.CreateElement("link");
-            temp.SetAttribute("rel", "mobile");
+            temp = xml.CreateElement("link", "http://webmastertool.naver.com");
+            entry.AppendChild(temp);
             temp.SetAttribute("href", id);
-            entry.AppendChild(temp);
+            temp.SetAttribute("rel", "mobile");
             temp = null;
             //
-            temp = xml.CreateElement("content");
+            temp = xml.CreateElement("content", "http://webmastertool.naver.com");
             temp.SetAttribute("type", "html");
             temp.InnerXml = "<![CDATA["+html+ "]]>";
             entry.AppendChild(temp);
             temp = null;
             //
-            temp = xml.CreateElement("summary");
+            temp = xml.CreateElement("summary", "http://webmastertool.naver.com");
             temp.SetAttribute("type", "text");
             temp.InnerXml = "<![CDATA[" + summary + "]]>";
             entry.AppendChild(temp);
             temp = null;
-            //
+            ///////
+            if (chk_before_posts.Count != 0)
+            {
+                chk_after_posts.Enqueue(id);
+            }
+            XmlNode node = entry;
+            xml.DocumentElement.AppendChild(entry);
+        }
+        public void chk_deleted_posts()
+        {
+            string now = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss") + "+09:00";
+            string[] before = chk_before_posts.ToArray();
+            string[] after = chk_after_posts.ToArray();
 
-
-            XmlNode FN = xml.DocumentElement;
-            FN.AppendChild(entry);
-            xml.AppendChild(FN);
+            foreach (string id in before)
+            {
+                bool isDeleted = true;
+                for (int i = 0; i < after.Length; i++)
+                {
+                    if (id == after[i])
+                    {
+                        isDeleted = false;
+                        break;
+                    }
+                }
+                if (isDeleted == true)
+                {
+                    XmlNodeList xnl = xml.GetElementsByTagName("entry");
+                    foreach (XmlNode xn in xnl)
+                    {
+                        if (xn["id"].InnerText == id)
+                        {
+                            xml["feed"].RemoveChild(xn);
+                            break;
+                        }
+                    }
+                    XmlElement deleted_entry = xml.CreateElement(null,"deleted-entry", "http://webmastertool.naver.com");
+                    deleted_entry.SetAttribute("when", now);
+                    deleted_entry.SetAttribute("ref", id);                    
+                    xml.DocumentElement.AppendChild(deleted_entry);
+                }
+            }
         }
 
 
@@ -180,7 +239,7 @@ namespace Naver
         }
         XmlNode CreateNode(XmlDocument xml, string name, string innerxml)
         {
-            XmlNode output = xml.CreateElement(null, name, null);
+            XmlNode output = xml.CreateElement(name, "http://webmastertool.naver.com");
             output.InnerXml = innerxml;
             return output;
         }
@@ -193,7 +252,7 @@ namespace Naver
         }
         string innerxml(XmlDocument xml, string name, string innerxml)
         {
-            XmlElement output = xml.CreateElement(null, name, null);
+            XmlElement output = xml.CreateElement(name);
             output.InnerXml = innerxml;
             return output.OuterXml;
         }
